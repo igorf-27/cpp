@@ -238,6 +238,7 @@ void Call::print(std::ostream& os){
 	arg->print(os);	
 	os<<")";
 }
+
 Expression* Call::eval(Env& en){
 	Expression* valfun=fun->eval(en);
 	if (valfun->getType()!=_FUNC){
@@ -249,27 +250,3 @@ Expression* Call::eval(Env& en){
 	en.remove( argId );
 	return e_ret;
 }
-
-
-
-
-/*int main(){
-	Expression* n = new Val(17);
-	
-	return 0;
-}*/
-
-//typedef std::map<Id*, Expression*> env;
-
-/*struct env{
-	std::map<std::string, Expression*>* m;
-	std::string fromEnv(std::string k){
-		std::map<std::string, Expression*>::iterator it;
-		it=m->find(k);
-		if (it!=m->end() )
-			return (*it).first;
-		else
-			return NULL;
-	}
-};*/
-

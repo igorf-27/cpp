@@ -16,21 +16,19 @@ int main(){
 	std::queue<Token*> phrase = getPhrase(inf);
 	Expression* e = makeExpression(phrase);
 
-	//e->print(std::cout);
-	//std::cout<<std::endl<<std::endl;
-	
-	//Env en;
 	
 	std::ofstream of;
 	of.open("output.txt", std::ios::out);
 	
 	try{
-		Expression* e_new = e->eval(/*en*/);
+		Expression* e_new = e->eval();
 		e_new->print(of);
 	} catch (const char*) {
 		of<<"ERROR";
 	}
-		
+	
+	of.close();
+	
 	return 0;
 }
 

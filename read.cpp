@@ -286,4 +286,3 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 	throw "read: ) expected";
 			
 }
-	
