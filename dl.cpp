@@ -14,6 +14,9 @@ int main(){
 	inf.open("input.txt", std::ios::in);
 	
 	std::queue<Token*> phrase = getPhrase(inf);
+	
+	inf.close();
+	
 	Expression* e = makeExpression(phrase);
 
 	
@@ -23,8 +26,9 @@ int main(){
 	try{
 		Expression* e_new = e->eval();
 		e_new->print(of);
-	} catch (const char*) {
+	} catch (const char* s) {
 		of<<"ERROR";
+		std::cerr<<s;
 	}
 	
 	of.close();

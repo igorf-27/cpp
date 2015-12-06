@@ -1,13 +1,13 @@
-п»їenum TokenType{
-	UNKN,	//РЅРµРѕРїРѕР·РЅР°РЅРЅРѕРµ
+enum TokenType{
+	UNKN,	//неопознанное
 	
 	BRA,	// (
 	KET,	// )
 	EQ,	// =
-	INUM,	// С†РµР»РѕРµ С‡РёСЃР»Рѕ
-	ID,	// РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ
+	INUM,	// целое число
+	ID,	// идентификатор
 
-	//РєР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР°
+	//ключевые слова
 	VAL,
 	VAR,
 	ADD,
@@ -20,7 +20,7 @@
 	CALL,
 
 	
-	FEND	//РєРѕРЅРµС† С„Р°Р№Р»Р°
+	FEND	//конец файла
 };
 
 class Token{
@@ -69,9 +69,9 @@ Token* getToken(std::istream& inf){
 		c=inf.get();
 		if(inf.eof())
 			return new Token(FEND);
-		}while(isspace(c));	//РёРіРЅРѕСЂРёСЂСѓРµРј РїСЂРѕР±РµР»С‹ Рё РїСЂРѕС‡.
+		}while(isspace(c));	//игнорируем пробелы и проч.
 	
-	if(c=='-'){	//С‚РѕР»СЊРєРѕ РІ СЃРѕСЃС‚Р°РІРµ Р·Р°РїРёСЃРё С†РµР»РѕРіРѕ С‡РёСЃР»Р°
+	if(c=='-'){	//только в составе записи целого числа
 		c=inf.get();
 		if(!isdigit(c)){
 			inf.putback(c);
@@ -92,8 +92,8 @@ Token* getToken(std::istream& inf){
 	}
 	
 
-	//РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СЃРѕСЃС‚РѕРёС‚ РёР· Р±СѓРєРІ, С†РёС„СЂ Рё _
-	//Рё РЅР°С‡РёРЅР°РµС‚СЃСЏ РЅРµ СЃ С†РёС„СЂС‹
+	//идентификатор состоит из букв, цифр и _
+	//и начинается не с цифры
 	if(isalpha(c) || c=='_'){
 		
 		std::string s;
@@ -267,11 +267,31 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 		
 		case CALL:{
 			
-			Expression* e_func=makeExpression(phrase);
-			Expression* e_arg=makeExpression(phrase);
+			t = phrase.front();	//не достаём из очереди
+			if (t->tType==BRA){
+			
+				Expression* e_func=makeExpression(phrase);
+				Expression* e_arg=makeExpression(phrase);
 	
-			e_ret =  new Call(e_func, e_arg);
-			break;
+				e_ret =  new Call(e_func, e_arg);
+				break;
+
+			//changed here
+			}else if (t->tType==ID){
+				phrase.pop();	//убираем имя функции из очереди
+				std::string s_name = t->getString();	//запоминаем его
+				
+				t=phrase.front();	//достаём =
+				phrase.pop();
+				if (t->tType!=EQ){
+					throw "read: \"call <identifier>\" must be followed by =";
+				}
+				Expression* e_func = makeExpression(phrase);
+				
+				Expression* e_arg=makeExpression(phrase);
+				
+				return new Let (s_name, e_func, new Call (new Var(s_name), e_arg) );
+			}
 		}
 		
 		default:
@@ -286,3 +306,4 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 	throw "read: ) expected";
 			
 }
+	
