@@ -1,13 +1,13 @@
-enum TokenType{
-	UNKN,	//неопознанное
+п»їenum TokenType{
+	UNKN,	//РЅРµРѕРїРѕР·РЅР°РЅРЅРѕРµ
 	
 	BRA,	// (
 	KET,	// )
 	EQ,	// =
-	INUM,	// целое число
-	ID,	// идентификатор
+	INUM,	// С†РµР»РѕРµ С‡РёСЃР»Рѕ
+	ID,	// РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ
 
-	//ключевые слова
+	//РєР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР°
 	VAL,
 	VAR,
 	ADD,
@@ -24,7 +24,7 @@ enum TokenType{
 	FBRA,	// {
 	FKET,	// }
 	
-	FEND	//конец файла
+	FEND	//РєРѕРЅРµС† С„Р°Р№Р»Р°
 };
 
 class Token{
@@ -73,9 +73,9 @@ Token* getToken(std::istream& inf){
 		c=inf.get();
 		if(inf.eof())
 			return new Token(FEND);
-		}while(isspace(c));	//игнорируем пробелы и проч.
+		}while(isspace(c));	//РёРіРЅРѕСЂРёСЂСѓРµРј РїСЂРѕР±РµР»С‹ Рё РїСЂРѕС‡.
 	
-	if(c=='-'){	//только в составе записи целого числа
+	if(c=='-'){	//С‚РѕР»СЊРєРѕ РІ СЃРѕСЃС‚Р°РІРµ Р·Р°РїРёСЃРё С†РµР»РѕРіРѕ С‡РёСЃР»Р°
 		c=inf.get();
 		if(!isdigit(c)){
 			inf.putback(c);
@@ -96,8 +96,8 @@ Token* getToken(std::istream& inf){
 	}
 	
 
-	//идентификатор состоит из букв, цифр и _
-	//и начинается не с цифры
+	//РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СЃРѕСЃС‚РѕРёС‚ РёР· Р±СѓРєРІ, С†РёС„СЂ Рё _
+	//Рё РЅР°С‡РёРЅР°РµС‚СЃСЏ РЅРµ СЃ С†РёС„СЂС‹
 	if(isalpha(c) || c=='_'){
 		
 		std::string s;
@@ -276,7 +276,7 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 		
 		case CALL:{
 			
-			t = phrase.front();	//не достаём из очереди
+			t = phrase.front();	//РЅРµ РґРѕСЃС‚Р°С‘Рј РёР· РѕС‡РµСЂРµРґРё
 			if (t->tType==BRA){
 			
 				Expression* e_func=makeExpression(phrase);
@@ -287,10 +287,10 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 
 			//changed here
 			}else if (t->tType==ID){
-				phrase.pop();	//убираем имя функции из очереди
-				std::string s_name = t->getString();	//запоминаем его
+				phrase.pop();	//СѓР±РёСЂР°РµРј РёРјСЏ С„СѓРЅРєС†РёРё РёР· РѕС‡РµСЂРµРґРё
+				std::string s_name = t->getString();	//Р·Р°РїРѕРјРёРЅР°РµРј РµРіРѕ
 				
-				t=phrase.front();	//достаём =
+				t=phrase.front();	//РґРѕСЃС‚Р°С‘Рј =
 				phrase.pop();
 				if (t->tType!=EQ){
 					throw "read: \"call <identifier>\" must be followed by =";
