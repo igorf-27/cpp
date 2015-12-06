@@ -1,4 +1,4 @@
-ï»¿class Expression;
+class Expression;
 
 class Env{
 	std::map<std::string, std::stack<Expression*> > m;
@@ -18,6 +18,8 @@ class Expression{
 
 public:
 	Expression() {}
+	virtual ~Expression() {/*std::cout<<"exp"<<std::endl;*/}
+	
 	virtual void print(std::ostream& os)=0;
 	virtual Expression* eval(Env& en)=0;
 	Expression* eval();
@@ -53,6 +55,8 @@ class Add : public Expression{
 	Expression* right;
 public:
 	Add(Expression* l, Expression* r) : left(l), right(r){}
+	~Add() {delete left; delete right;}
+	
 	void print(std::ostream& os);
 	Expression* eval(Env& en);
 };
@@ -65,6 +69,7 @@ class Iff : public Expression{
 public:
 	Iff(Expression* c1, Expression* c2, Expression* th, Expression* el)
 		: cond1(c1), cond2(c2), e_then(th), e_else(el){}
+	~Iff() {delete cond1; delete cond2; delete e_then; delete e_else;}
 	void print(std::ostream& os);
 	Expression* eval(Env& en);
 };
@@ -76,6 +81,7 @@ class Let : public Expression{
 public:
 	Let(std::string name, Expression* v, Expression* b)
 		: name(name), value(v), body(b){}
+	~Let() {delete value; delete body; /*std::cout<<"let"<<std::endl;*/}
 	void print(std::ostream& os);
 	Expression* eval(Env& en);
 };
@@ -87,9 +93,9 @@ class Function : public Expression{
 	Expression* body;
 	Env en;
 public:
-	
 	Function(std::string p, Expression* b)
 		: par(p), body(b){}	//environment will be put by eval
+	~Function() {delete body;}
 	void print(std::ostream& os);
 	Expression* eval(Env& en);
 	Expression* func_makeCall( Expression* arg_evaluated);
@@ -106,10 +112,44 @@ class Call : public Expression{
 public:
 	Call(Expression* f, Expression* a)
 		: fun(f), arg(a){}
+	~Call() {delete fun; delete arg;}
 	void print(std::ostream& os);
 	Expression* eval(Env& en);
 };
 
+class Set : public Expression{
+	std::string name;
+	Expression* value;
+
+public:
+	Set (std::string n, Expression* v)
+		: name(n), value(v) {}
+	~Set() {delete value;}
+	void print(std::ostream& os);
+	Expression* eval(Env& en);
+};
+
+
+class Block : public Expression{
+	std::list<Expression*> li;
+	Env en_block;
+
+public:
+	Block ( std::list<Expression*> l )
+		: li(l) {}	//environment will be put by eval
+	~Block();
+	void print(std::ostream& os);
+	Expression* eval(Env& en);
+};
+
+
+//--------------------------
+
+Block::~Block(){
+	std::list<Expression*>::iterator it;
+	for ( it=this->li.begin(); it!=this->li.end(); ++it )
+		delete *it;
+}
 
 
 
@@ -190,15 +230,15 @@ Expression* Let::eval(Env& en){
 	Expression* value_evaluated = value->eval(en);
 
 	en.add(name, value_evaluated);
-	if (value_evaluated->isFunction())	//ÐµÑÐ»Ð¸ ÑÑ‚Ð¾ Ð±Ñ‹Ð»Ð° Ñ„ÑƒÐ½ÐºÑ†Ð¸Ñ
-		value_evaluated->func_setEnv(en);	//Ð¾Ð½Ð¾ Ð¼ÐµÐ½ÑÐµÑ‚ ÐµÑ‘, Ð¿Ñ€Ð¸Ñ†ÐµÐ¿Ð»ÑÑ ÐµÐ¹ Ñ‚ÐµÐºÑƒÑ‰Ð¸Ð¹ environment
-		/*Ð¿Ñ€Ð¸ ÑÑ‚Ð¾Ð¼ Ñƒ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸ Ð² ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð½Ð¾Ð¼ environment'Ðµ
-		Ð±ÑƒÐ´ÐµÑ‚ Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»ÐµÐ½Ð° Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ð°Ñ, ÑÐ¾Ð¾Ñ‚Ð²ÐµÑ‚ÑÑ‚Ð²ÑƒÑŽÑ‰Ð°Ñ ÑÑ‚Ð¾Ð¹ ÑÐ°Ð¼Ð¾Ð¹ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸
-		(Ñ‚. Ñ‡. Ñ€ÐµÐºÑƒÑ€ÑÐ¸Ñ Ð±ÑƒÐ´ÐµÑ‚ Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ñ‚ÑŒ), -
-		Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ ÑƒÐºÐ°Ð·Ð°Ñ‚ÐµÐ»ÑŒ Ð½Ð° Ð½ÐµÑ‘ Ð² ÐµÑ‘ environment'Ðµ
-		ÑƒÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÑ‚ Ð½Ð° Ñ‚Ð¾ Ð¶Ðµ ÑÐ°Ð¼Ð¾Ðµ, Ð½Ð° Ñ‡Ñ‚Ð¾ Ð¸ Ð·Ð´ÐµÑˆÐ½Ð¸Ð¹ value_evaluated -
-		Ñ‚. Ðµ. Ð¼Ñ‹ ÑÐ½Ð°Ñ‡Ð°Ð»Ð° Ð´Ð¾Ð±Ð°Ð²Ð¸Ð»Ð¸ Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½ÑƒÑŽ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸ Ð² Ð½Ð°Ñˆ environment,
-		Ð° Ð¿Ð¾Ñ‚Ð¾Ð¼ Ð¿Ñ€Ð¸Ñ†ÐµÐ¿Ð¸Ð»Ð¸ ÑÑ‚Ð¾Ð¹ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸ Ð½Ð°Ñˆ environment*/
+	if (value_evaluated->isFunction())	//åñëè ýòî áûëà ôóíêöèÿ
+		value_evaluated->func_setEnv(en);	//òî îíî ìåíÿåò å¸, ïðèöåïëÿÿ åé òåêóùèé environment
+		/*ïðè ýòîì ó ôóíêöèè â environment'å
+		ñòàíåò îïðåäåëåíà ïåðåìåííàÿ, ñîîòâåòñòâóþùàÿ ýòîé ñàìîé ôóíêöèè
+		(ò. ÷. ðåêóðñèÿ áóäåò ðàáîòàòü), -
+		ïîòîìó ÷òî óêàçàòåëü íà íå¸ â å¸ environment'å
+		óêàçûâàåò íà òî æå ñàìîå, íà ÷òî è çäåøíèé value_evaluated -
+		ò. å. ìû ñíà÷àëà äîáàâèëè ïåðåìåííóþ ôóíêöèè â íàø environment,
+		à ïîòîì ïðèöåïèëè ýòîé ôóíêöèè íàø environment*/
 		
 	Expression* e_ret=body->eval(en);
 	
@@ -230,6 +270,8 @@ void Function::func_setEnv(Env& enToSet){
 }
 
 Expression* Function::func_makeCall( Expression* arg_evaluated){
+
+	
 	this->en.add(this->par, arg_evaluated);
 	Expression* e_ret = this->body->eval(this->en);
 	this->en.remove(this->par);
@@ -237,6 +279,26 @@ Expression* Function::func_makeCall( Expression* arg_evaluated){
 	return e_ret;
 }
 
+
+Expression* Set::eval(Env& en){
+
+	en.add(this->name, this->value->eval() );
+	return this;
+}
+
+Expression* Block::eval(Env& en){
+	this->en_block = en;
+	
+	std::list<Expression*>::iterator it;
+	Expression* next=NULL;
+	for ( it=this->li.begin(); it!=this->li.end(); ++it ){
+		next=*it;
+		next=next->eval(en_block);
+	}
+	if (next==NULL)
+		next=this;
+	return next;	//en_block dies
+}
 
 //-------print------------
 
@@ -288,5 +350,21 @@ void Call::print(std::ostream& os){
 	os<<" ";
 	arg->print(os);	
 	os<<")";
+}
+
+void Set::print(std::ostream& os){
+	os<<"(set "<<name<<' ';
+	value->print(os);
+	os<<")";
+}
+
+void Block::print(std::ostream& os){
+	os<<"(block{ ";
+	std::list<Expression*>::iterator it;
+	for (it=this->li.begin(); it!=this->li.end(); it++){
+		(*it)->print(os);
+		os<<" ";
+	}
+	os<<"})";
 }
 

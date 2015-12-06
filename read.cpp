@@ -1,13 +1,13 @@
-п»їenum TokenType{
-	UNKN,	//РЅРµРѕРїРѕР·РЅР°РЅРЅРѕРµ
+enum TokenType{
+	UNKN,	//неопознанное
 	
 	BRA,	// (
 	KET,	// )
 	EQ,	// =
-	INUM,	// С†РµР»РѕРµ С‡РёСЃР»Рѕ
-	ID,	// РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ
+	INUM,	// целое число
+	ID,	// идентификатор
 
-	//РєР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР°
+	//ключевые слова
 	VAL,
 	VAR,
 	ADD,
@@ -19,8 +19,12 @@
 	FUNC,
 	CALL,
 
+	SET,
+	BLOCK,
+	FBRA,	// {
+	FKET,	// }
 	
-	FEND	//РєРѕРЅРµС† С„Р°Р№Р»Р°
+	FEND	//конец файла
 };
 
 class Token{
@@ -69,9 +73,9 @@ Token* getToken(std::istream& inf){
 		c=inf.get();
 		if(inf.eof())
 			return new Token(FEND);
-		}while(isspace(c));	//РёРіРЅРѕСЂРёСЂСѓРµРј РїСЂРѕР±РµР»С‹ Рё РїСЂРѕС‡.
+		}while(isspace(c));	//игнорируем пробелы и проч.
 	
-	if(c=='-'){	//С‚РѕР»СЊРєРѕ РІ СЃРѕСЃС‚Р°РІРµ Р·Р°РїРёСЃРё С†РµР»РѕРіРѕ С‡РёСЃР»Р°
+	if(c=='-'){	//только в составе записи целого числа
 		c=inf.get();
 		if(!isdigit(c)){
 			inf.putback(c);
@@ -92,8 +96,8 @@ Token* getToken(std::istream& inf){
 	}
 	
 
-	//РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СЃРѕСЃС‚РѕРёС‚ РёР· Р±СѓРєРІ, С†РёС„СЂ Рё _
-	//Рё РЅР°С‡РёРЅР°РµС‚СЃСЏ РЅРµ СЃ С†РёС„СЂС‹
+	//идентификатор состоит из букв, цифр и _
+	//и начинается не с цифры
 	if(isalpha(c) || c=='_'){
 		
 		std::string s;
@@ -117,15 +121,20 @@ Token* getToken(std::istream& inf){
 		if (s=="in") return new Token(IN);
 		if (s=="function") return new Token(FUNC);
 		if (s=="call") return new Token(CALL);
+		if (s=="set") return new Token(SET);
+		if (s=="block") return new Token(BLOCK);
 			
 		return new TokenId(s);
 	}
 	
 	TokenType t=UNKN;
-	
+
 	if (c=='(' ) t=BRA;
 	if (c==')' ) t=KET;
 	if (c=='=' ) t=EQ;
+	
+	if (c=='{') t=FBRA;
+	if (c=='}') t=FKET;
 
 	return new Token(t);
 }
@@ -267,7 +276,7 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 		
 		case CALL:{
 			
-			t = phrase.front();	//РЅРµ РґРѕСЃС‚Р°С‘Рј РёР· РѕС‡РµСЂРµРґРё
+			t = phrase.front();	//не достаём из очереди
 			if (t->tType==BRA){
 			
 				Expression* e_func=makeExpression(phrase);
@@ -278,10 +287,10 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 
 			//changed here
 			}else if (t->tType==ID){
-				phrase.pop();	//СѓР±РёСЂР°РµРј РёРјСЏ С„СѓРЅРєС†РёРё РёР· РѕС‡РµСЂРµРґРё
-				std::string s_name = t->getString();	//Р·Р°РїРѕРјРёРЅР°РµРј РµРіРѕ
+				phrase.pop();	//убираем имя функции из очереди
+				std::string s_name = t->getString();	//запоминаем его
 				
-				t=phrase.front();	//РґРѕСЃС‚Р°С‘Рј =
+				t=phrase.front();	//достаём =
 				phrase.pop();
 				if (t->tType!=EQ){
 					throw "read: \"call <identifier>\" must be followed by =";
@@ -290,8 +299,40 @@ Expression* makeExpression(std::queue<Token*>& phrase){
 				
 				Expression* e_arg=makeExpression(phrase);
 				
-				return new Let (s_name, e_func, new Call (new Var(s_name), e_arg) );
+				e_ret=new Let (s_name, e_func, new Call (new Var(s_name), e_arg) );
+				break;
 			}
+		}
+		case SET:{
+			t=phrase.front();
+			phrase.pop();
+			if (t->tType!=ID)
+				throw "read: \"set\" must be followed by an identifier";
+			std::string name=t->getString();
+			Expression* value = makeExpression(phrase);
+			
+			e_ret=new Set (name, value);
+			break;
+		}
+
+		case BLOCK:{
+			t=phrase.front();
+			phrase.pop();
+			if (t->tType!=FBRA)
+				throw "read: \"block\" must be followed by {";
+
+			std::list<Expression*> li;
+			while (phrase.front()->tType!=FKET){
+				Expression* next = makeExpression(phrase);
+				li.push_back(next);
+			}
+			if (phrase.front()->tType==FKET)
+				phrase.pop();
+			else
+				throw "read: } expected";
+			
+			e_ret=new Block(li);
+			break;
 		}
 		
 		default:

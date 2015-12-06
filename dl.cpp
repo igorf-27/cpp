@@ -1,9 +1,10 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <queue>
 #include <map>
 #include <stack>
+#include <list>
 
 #include "exp.cpp"
 #include "read.cpp"
@@ -17,8 +18,15 @@ int main(){
 	
 	inf.close();
 	
-	Expression* e = makeExpression(phrase);
+	Expression* e;
+	try{
+		e = makeExpression(phrase);
+	}catch (const char* s){
+		std::cerr<<s;
+		return 0;
+	}
 
+	//e->print(std::cout);
 	
 	std::ofstream of;
 	of.open("output.txt", std::ios::out);
