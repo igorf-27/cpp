@@ -4,21 +4,28 @@
 
 #include <complex>
 
-const int MAX_IT=500;
-const int MAX_ABS=200;
 
-const double mulred=0.6;
+/*const double mulred=0.6;
 const double mulgreen=1.5;
-const double mulblue=0.7;
+const double mulblue=2.6;*/
+
+const double mulred=0.8;
+const double mulgreen=0.7;
+const double mulblue=0.25;
+
+const int MAX_IT=500;
+const int MAX_ABS=2;
 const int side=400;
 const int initScope=3;
+
+const double PI = 4*atan(1.0);
 
 struct Plane{
 	std::complex<double> center;
 	int zoom;
 	Plane (double x, double y, int n) : center(x,y), zoom(n) {}
 	std::complex<double> coor(int x, int y){
-	return std::complex<double>((double)(x - side/2)/(double)(side/2/initScope)/zoom, (double)(y - side/2)/(double)(side/2/initScope)/zoom)+center;
+		return std::complex<double>((double)(x - side/2)/(double)(side/2/initScope)/zoom, (double)(y - side/2)/(double)(side/2/initScope)/zoom)+center;
 	}
 };
 
@@ -37,23 +44,24 @@ int main()
 	
  		 
 	const char* t = "Left/right click : zoom in/out      ESC : quit"; 
-	SetTextColor (hdc, RGB(255, 255, 255));
-	SetBkColor(hdc, RGB(0, 0, 0));
+    SetTextColor (hdc, RGB(255, 255, 255));
+    SetBkColor(hdc, RGB(0, 0, 0));
 	TextOutA (hdc, 10, side+20, t, 46);
 	 
-	Plane pl(0, 0, 1);
-	draw(hdc, pl);
+ 	 Plane pl(0, 0, 1);
+	 draw(hdc, pl);
  
  
-	HANDLE hStdin; 
+    HANDLE hStdin; 
 	hStdin = GetStdHandle(STD_INPUT_HANDLE); 
 
-	DWORD cNumRead, fdwMode, i; 
-	INPUT_RECORD irInBuf[128]; 
-	int counter=0;
-	fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
-	if(!SetConsoleMode(hStdin, fdwMode))
-		ExitProcess(0);
+    DWORD cNumRead, fdwMode, i; 
+    INPUT_RECORD irInBuf[128]; 
+    int counter=0;
+
+    fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+    if(!SetConsoleMode(hStdin, fdwMode))
+    	ExitProcess(0);
 
     // Loop to read and handle the next 100 input events. 
 
@@ -104,6 +112,33 @@ int main()
     return 0; 
 }
 
+COLORREF colour(int i){
+	double c=(double)i/MAX_IT;
+	double r, g, b;
+	if (c<mulred)
+		r=sin(c/mulred*PI/2);
+	else
+		r=sin(1.0/(mulred-1)*(c-1)*PI/2);
+		
+	if (c<mulgreen)
+		g=sin(c/mulgreen*PI/2);
+	else
+		g=sin(1.0/(mulgreen-1)*(c-1)*PI/2);
+		
+	if (c<mulblue)
+		b=sin(c/mulblue*PI/2);
+	else
+		b=sin(1.0/(mulblue-1)*(c-1)*PI/2);
+		
+	r*=255; //int ri=floor(r);
+	g*=255;
+	b*=255;
+	
+	
+	return RGB(r, g, b);
+	
+	
+}
 
 COLORREF slowness(std::complex<double> c){
 	std::complex<double> z(0,0);
@@ -111,7 +146,8 @@ COLORREF slowness(std::complex<double> c){
 	while (++i < MAX_IT && std::abs(z) < MAX_ABS){
 		z=z*z+c;
 	}
-	return RGB(i*(mulred*(255.0/MAX_IT)), i*(mulgreen*(255.0/MAX_IT)), i*(mulblue*(255.0/MAX_IT)));
+	//return RGB(i*(mulred*(255.0/MAX_IT)), i*(mulgreen*(255.0/MAX_IT)), i*(mulblue*(255.0/MAX_IT)));
+	return colour(i);
 }
 
 
@@ -164,8 +200,8 @@ VOID MouseEventProc(MOUSE_EVENT_RECORD mer, HWND wh, Plane& pl)
             else if(mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED)
             {
                 if (pl.zoom>=2)
-			pl.zoom=pl.zoom/2;
-		draw(GetDC(wh), pl);
+					pl.zoom=pl.zoom/2;
+				draw(GetDC(wh), pl);
             }
 
             break;
