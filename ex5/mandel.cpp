@@ -14,7 +14,7 @@ const double mulgreen=0.7;
 const double mulblue=0.25;
 
 const int MAX_IT=500;
-const int MAX_ABS=2;
+const int MAX_ABS=4;
 const int side=400;
 const int initScope=3;
 
@@ -143,7 +143,7 @@ COLORREF colour(int i){
 COLORREF slowness(std::complex<double> c){
 	std::complex<double> z(0,0);
 	int i=0;
-	while (++i < MAX_IT && std::abs(z) < MAX_ABS){
+	while (++i < MAX_IT && real(z*conj(z)) < 4/*std::abs(z) < MAX_ABS*/){
 		z=z*z+c;
 	}
 	//return RGB(i*(mulred*(255.0/MAX_IT)), i*(mulgreen*(255.0/MAX_IT)), i*(mulblue*(255.0/MAX_IT)));
