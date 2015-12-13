@@ -2,16 +2,14 @@
 #include <windows.h>
 #include <wingdi.h>
 
-#include <iostream>
 #include <complex>
 
+const int MAX_IT=500;
+const int MAX_ABS=200;
 
 const double mulred=0.6;
 const double mulgreen=1.5;
 const double mulblue=0.7;
-
-const int MAX_IT=500;
-const int MAX_ABS=200;
 const int side=400;
 const int initScope=3;
 
@@ -20,7 +18,7 @@ struct Plane{
 	int zoom;
 	Plane (double x, double y, int n) : center(x,y), zoom(n) {}
 	std::complex<double> coor(int x, int y){
-		return std::complex<double>((double)(x - side/2)/(double)(side/2/initScope)/zoom, (double)(y - side/2)/(double)(side/2/initScope)/zoom)+center;
+	return std::complex<double>((double)(x - side/2)/(double)(side/2/initScope)/zoom, (double)(y - side/2)/(double)(side/2/initScope)/zoom)+center;
 	}
 };
 
@@ -39,24 +37,23 @@ int main()
 	
  		 
 	const char* t = "Left/right click : zoom in/out      ESC : quit"; 
-    SetTextColor (hdc, RGB(255, 255, 255));
-    SetBkColor(hdc, RGB(0, 0, 0));
+	SetTextColor (hdc, RGB(255, 255, 255));
+	SetBkColor(hdc, RGB(0, 0, 0));
 	TextOutA (hdc, 10, side+20, t, 46);
 	 
- 	 Plane pl(0, 0, 1);
-	 draw(hdc, pl);
+	Plane pl(0, 0, 1);
+	draw(hdc, pl);
  
  
-    HANDLE hStdin; 
+	HANDLE hStdin; 
 	hStdin = GetStdHandle(STD_INPUT_HANDLE); 
 
-    DWORD cNumRead, fdwMode, i; 
-    INPUT_RECORD irInBuf[128]; 
-    int counter=0;
-
-    fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
-    if(!SetConsoleMode(hStdin, fdwMode))
-    	ExitProcess(0);
+	DWORD cNumRead, fdwMode, i; 
+	INPUT_RECORD irInBuf[128]; 
+	int counter=0;
+	fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+	if(!SetConsoleMode(hStdin, fdwMode))
+		ExitProcess(0);
 
     // Loop to read and handle the next 100 input events. 
 
@@ -167,8 +164,8 @@ VOID MouseEventProc(MOUSE_EVENT_RECORD mer, HWND wh, Plane& pl)
             else if(mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED)
             {
                 if (pl.zoom>=2)
-					pl.zoom=pl.zoom/2;
-				draw(GetDC(wh), pl);
+			pl.zoom=pl.zoom/2;
+		draw(GetDC(wh), pl);
             }
 
             break;
