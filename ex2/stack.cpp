@@ -1,4 +1,4 @@
-/* Тут шаблон стека. */
+п»ї/* РўСѓС‚ С€Р°Р±Р»РѕРЅ СЃС‚РµРєР°. */
 
 template <typename T>
 class Stack{
@@ -8,19 +8,19 @@ class Stack{
 		Node(Node* prev, T data)
 			: prev(prev), data(data) {}		
 	};
-	Node* top;	//вершина (последняя по времени запись)
+	Node* top;	//РІРµСЂС€РёРЅР° (РїРѕСЃР»РµРґРЅСЏСЏ РїРѕ РІСЂРµРјРµРЅРё Р·Р°РїРёСЃСЊ)
 public:
 	Stack();
 	~Stack();
 	void push(T);
 	T pop();
-	T get();	//посмотреть, что в вершине
+	T get();	//РїРѕСЃРјРѕС‚СЂРµС‚СЊ, С‡С‚Рѕ РІ РІРµСЂС€РёРЅРµ
 	bool isEmpty();
 };
 
 template <typename T>
 Stack<T>::Stack(){
-	top = 0;	//или как?
+	top = 0;	//РёР»Рё РєР°Рє?
 }
 
 template <typename T>
@@ -38,8 +38,8 @@ template <typename T>
 T Stack<T>::pop(){
 	if ( this->isEmpty() )
 		throw;
-	T olddata=top->data;	//сохраняем то, что вернём
-	Node* oldtop=top;	//эту запись удалим
+	T olddata=top->data;	//СЃРѕС…СЂР°РЅСЏРµРј С‚Рѕ, С‡С‚Рѕ РІРµСЂРЅС‘Рј
+	Node* oldtop=top;	//СЌС‚Сѓ Р·Р°РїРёСЃСЊ СѓРґР°Р»РёРј
 	this->top=top->prev;
 	delete oldtop;
 	return olddata;
